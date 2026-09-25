@@ -126,8 +126,12 @@ fi
 
 if (( UNINSTALL )); then
   step "Uninstall"
-  backup "$HOME/.zshrc"
-  backup "$HOME/.config/starship.toml"
+  for f in "$HOME/.zshrc" "$HOME/.config/starship.toml"; do
+    [[ -e "$f" ]] || continue
+    b="$f.bak-$(date +%Y%m%d-%H%M%S)"
+    run cp -a "$f" "$b"
+    ok "backed up $f -> $(basename "$b")"
+  done
   run rm -f "$HOME/.zshrc" "$HOME/.config/starship.toml"
   ok "removed config files (backups kept, repos and packages left alone)"
   exit 0
@@ -226,12 +230,19 @@ fi
 # ----------------------------------------------------------- config files
 
 step "Config files"
-backup "$HOME/.zshrc"
-backup "$HOME/.config/starship.toml"
+install_if_changed() { # install_if_changed <src> <dest>
+  local src="$1" dest="$2"
+  if [[ -f "$dest" ]] && cmp -s "$src" "$dest"; then
+    skip "$dest already up to date"
+    return 0
+  fi
+  backup "$dest"
+  run install -Dm644 "$src" "$dest"
+  ok "installed $dest"
+}
 
-run install -Dm644 "$SRC_HOME/.zshrc"      "$HOME/.zshrc"
-run install -Dm644 "$SRC_HOME/starship.toml" "$HOME/.config/starship.toml"
-ok "installed ~/.zshrc and ~/.config/starship.toml"
+install_if_changed "$SRC_HOME/.zshrc"        "$HOME/.zshrc"
+install_if_changed "$SRC_HOME/starship.toml" "$HOME/.config/starship.toml"
 
 # ------------------------------------------------------------ terminal font
 
