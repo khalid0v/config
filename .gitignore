@@ -1,0 +1,12 @@
+# Backups made by bootstrap.sh
+*.bak-*
+
+# zsh completion cache
+.zcompdump*
+.zsh_history
+
+# anything machine-specific or secret
+.env
+*.key
+*.pem
+id_ed25519*
